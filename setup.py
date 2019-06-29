@@ -15,15 +15,19 @@ setup(
     author="Gerald",
     author_email='i@gerald.top',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3 :: Only',
     ],
     description="A simple JSON server",
+    long_description=open('README.md').read(),
+    long_description_content_type="text/markdown",
     entry_points={
         'console_scripts': [
             'json_server=json_server.cli:main',
