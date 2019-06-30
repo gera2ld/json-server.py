@@ -2,6 +2,7 @@ import json
 import asyncio
 import secrets
 from aiohttp import web
+from aiohttp.log import server_logger
 
 FIELD_ID = 'id'
 
@@ -48,7 +49,12 @@ class IdGenerator:
         return gen
 
 class DataWrapper:
-    def __init__(self, data):
+    def __init__(self, filename):
+        self.filename = filename
+        try:
+            data = json.load(open(filename, encoding='utf-8'))
+        except FileNotFoundError:
+            data = {}
         self.data = data
 
     def get(self, keys):
@@ -92,13 +98,13 @@ class DataWrapper:
         array = self.get(keys)
         array.append(item)
 
+    def dump(self):
+        json.dump(self.data, open(self.filename, 'w', encoding='utf-8'))
+
 class Handler:
     def __init__(self, filename):
-        try:
-            data = json.load(open(filename, encoding='utf-8'))
-        except FileNotFoundError:
-            data = {}
-        self.data = DataWrapper(data)
+        self.data = DataWrapper(filename)
+        self.timer = None
 
     async def __call__(self, request):
         method = getattr(self, f'do_{request.method}', None)
@@ -109,6 +115,17 @@ class Handler:
         if asyncio.iscoroutine(result):
             result = await result
         return result
+
+    def dump(self):
+        self.timer = None
+        self.data.dump()
+        server_logger.info('data dumped')
+
+    def schedule_dump(self):
+        loop = asyncio.get_event_loop()
+        if self.timer is not None:
+            self.timer.cancel()
+        self.timer = loop.call_later(1, self.dump)
 
     def do_GET(self, request, keys):
         data = self.data.get(keys)
@@ -132,12 +149,14 @@ class Handler:
         else:
             # Singular
             self.data.set(keys, item)
+        self.schedule_dump()
         return web.json_response(item, status=201)
 
     async def do_PUT(self, request, keys):
         body = await request.json()
         item = body.copy()
         self.data.set(keys, item)
+        self.schedule_dump()
         return web.json_response(item)
 
     async def do_PATCH(self, request, keys):
@@ -145,8 +164,10 @@ class Handler:
         patch = body.copy()
         item = self.data.get(keys)
         item.update(patch)
+        self.schedule_dump()
         return web.json_response(item)
 
     def do_DELETE(self, request, keys):
         self.data.set(keys)
+        self.schedule_dump()
         return web.HTTPNoContent()
