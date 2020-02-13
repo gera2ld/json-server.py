@@ -1,3 +1,3 @@
-__author__ = """Gerald"""
-__email__ = 'i@gerald.top'
-__version__ = '0.1.0'
+from importlib.metadata import version
+
+__version__ = version('json_server.py')
