@@ -1,6 +1,6 @@
 # json_server.py
 
-[![PyPI](https://img.shields.io/pypi/v/json_server.py.svg)]()
+[![PyPI](https://img.shields.io/pypi/v/json_server.py.svg)](https://pypi.org/project/json-server.py/)
 
 Fake REST API with zero coding.
 

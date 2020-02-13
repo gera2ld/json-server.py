@@ -7,6 +7,8 @@ license = "MIT"
 packages = [
   { include = "json_server" },
 ]
+repository = 'https://github.com/gera2ld/json_server.py'
+readme = 'README.md'
 
 [tool.poetry.dependencies]
 python = "^3.6"
