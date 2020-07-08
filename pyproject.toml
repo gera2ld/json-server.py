@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "json-server.py"
-version = "0.1.6"
+version = "0.1.7"
 description = "A simple JSON server"
 authors = ["Gerald <gera2ld@163.com>"]
 license = "MIT"
