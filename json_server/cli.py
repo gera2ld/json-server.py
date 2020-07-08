@@ -10,6 +10,7 @@ from .handlers import Handler
 from . import __version__
 
 @click.command()
+@click.version_option(__version__)
 @click.option('-b', '--bind', default=':3000', help='the address to bind, default as `:3000`')
 @click.argument('filename', default='db.json')
 def main(bind, filename):
