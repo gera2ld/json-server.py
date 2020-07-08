@@ -4,7 +4,7 @@ import urllib
 import logging
 import asyncio
 import click
-from gera2ld.pyserve import serve_aiohttp
+from gera2ld.pyserve import run_forever, start_server_asyncio
 from aiohttp.log import server_logger
 from .handlers import Handler
 from . import __version__
@@ -18,7 +18,7 @@ def main(bind, filename):
         'JSON Server v%s/%s %s - by Gerald',
         __version__, platform.python_implementation(), platform.python_version())
     handle = Handler(filename)
-    serve_aiohttp(handle, bind)
+    run_forever(start_server_asyncio(handle, bind))
     return 0
 
 if __name__ == "__main__":

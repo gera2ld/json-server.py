@@ -8,6 +8,20 @@ This project is heavily inspired by [json-server](https://github.com/typicode/js
 
 Requires Python 3.5+.
 
+## Installation
+
+It's highly recommended to install with [pipx](https://pipxproject.github.io/pipx/).
+
+```sh
+$ pipx install json-server.py
+```
+
+Or install with pip at your own risk:
+
+```sh
+$ pip3 install json-server.py
+```
+
 ## Usage
 
 ```
