@@ -6,10 +6,11 @@ from aiohttp.log import server_logger
 
 FIELD_ID = 'id'
 
+
 class IdGenerator:
     cache = {}
 
-    def __init__(self, data = None):
+    def __init__(self, data=None):
         self.id_type = int
         self.id_max = 0
         self.id_set = set()
@@ -19,7 +20,7 @@ class IdGenerator:
     def generate_id(self):
         if self.id_type is int:
             return self.id_max + 1
-        for i in range(100):
+        for _ in range(100):
             key = secrets.token_urlsafe(8)
             if key not in self.id_set:
                 return key
@@ -48,6 +49,7 @@ class IdGenerator:
             cls.cache[key] = gen
         return gen
 
+
 class DataWrapper:
     def __init__(self, filename):
         self.filename = filename
@@ -64,7 +66,8 @@ class DataWrapper:
                 child = data.get(key)
             elif isinstance(data, list):
                 for item in data:
-                    if isinstance(item, dict) and str(item.get(FIELD_ID)) == key:
+                    if isinstance(item, dict) and str(
+                            item.get(FIELD_ID)) == key:
                         child = item
                         break
                 else:
@@ -100,6 +103,7 @@ class DataWrapper:
 
     def dump(self):
         json.dump(self.data, open(self.filename, 'w', encoding='utf-8'))
+
 
 class Handler:
     def __init__(self, filename):
