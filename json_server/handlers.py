@@ -110,7 +110,7 @@ class Handler:
         method = getattr(self, f'do_{request.method}', None)
         if method is None:
             raise web.HTTPNotImplemented()
-        keys = request.path[1:].split('/')
+        keys = request.path.rstrip('/').split('/')[1:]
         result = method(request, keys)
         if asyncio.iscoroutine(result):
             result = await result
