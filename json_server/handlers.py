@@ -86,6 +86,8 @@ class DataWrapper:
                 if str(item.get(FIELD_ID)) == last_key:
                     break
             else:
+                if value is not None:
+                    parent.append({**value, FIELD_ID: last_key})
                 return
             if value is None:
                 del parent[index]
