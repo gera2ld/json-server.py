@@ -1,6 +1,7 @@
-import json
 import asyncio
-import secrets
+import json
+import uuid
+
 from aiohttp import web
 from aiohttp.log import server_logger
 
@@ -10,31 +11,27 @@ FIELD_ID = 'id'
 class IdGenerator:
     cache = {}
 
-    def __init__(self, data=None):
+    def __init__(self, data):
         self.id_type = int
         self.id_max = 0
-        self.id_set = set()
-        if data is not None:
-            self.update_items(data)
+        self.update_items(data)
 
     def generate_id(self):
         if self.id_type is int:
             return self.id_max + 1
-        for _ in range(100):
-            key = secrets.token_urlsafe(8)
-            if key not in self.id_set:
-                return key
-        else:
-            raise ValueError('Cannot generate unique ID')
+        return str(uuid.uuid4())
 
     def update(self, item):
         item_id = item.get(FIELD_ID)
+        if item_id is None:
+            item_id = self.generate_id()
+            item = {**item, FIELD_ID: item_id}
         if self.id_type is int:
             if isinstance(item_id, int):
                 self.id_max = max(self.id_max, item_id)
             else:
                 self.id_type = str
-        self.id_set.add(str(item_id))
+        return item
 
     def update_items(self, data):
         for item in data:
@@ -86,22 +83,35 @@ class DataWrapper:
                 if str(item.get(FIELD_ID)) == last_key:
                     break
             else:
-                if value is not None:
-                    parent.append({**value, FIELD_ID: last_key})
-                return
-            if value is None:
+                index = -1
+            if value is not None:
+                try:
+                    item_id = int(last_key)
+                except ValueError:
+                    item_id = last_key
+                value = {
+                    **value,
+                    FIELD_ID: item_id,
+                }
+                value = IdGenerator.load(parent).update(value)
+                if index < 0:
+                    parent.append(value)
+                else:
+                    parent[index] = value
+            elif index >= 0:
                 del parent[index]
-            else:
-                parent[index] = value
-        else:
+        elif isinstance(parent, dict):
             if value is None:
                 parent.pop(last_key, None)
             else:
                 parent[last_key] = value
+        return value
 
     def append(self, keys, item):
         array = self.get(keys)
+        item = IdGenerator.load(array).update(item)
         array.append(item)
+        return item
 
     def dump(self):
         json.dump(self.data, open(self.filename, 'w', encoding='utf-8'))
@@ -144,32 +154,25 @@ class Handler:
         if data is None:
             return web.json_response({}, status=404)
         body = await request.json()
-        item = body.copy()
         if isinstance(data, list):
             # Plural
-            if FIELD_ID not in item:
-                gen = IdGenerator.load(data)
-                item[FIELD_ID] = gen.generate_id()
-            gen.update(item)
-            self.data.append(keys, item)
+            item = self.data.append(keys, body)
         else:
             # Singular
-            self.data.set(keys, item)
+            item = self.data.set(keys, body)
         self.schedule_dump()
         return web.json_response(item, status=201)
 
     async def do_PUT(self, request, keys):
         body = await request.json()
-        item = body.copy()
-        self.data.set(keys, item)
+        item = self.data.set(keys, body)
         self.schedule_dump()
         return web.json_response(item)
 
     async def do_PATCH(self, request, keys):
         body = await request.json()
-        patch = body.copy()
         item = self.data.get(keys)
-        item.update(patch)
+        item.update(body)
         self.schedule_dump()
         return web.json_response(item)
 
