@@ -93,6 +93,8 @@ class DataWrapper:
                     item_id = int(last_key)
                 except ValueError:
                     item_id = last_key
+                if str(item_id) != last_key:
+                    item_id = last_key
                 value = {
                     **value,
                     FIELD_ID: item_id,
