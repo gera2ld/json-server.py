@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "json-server.py"
-version = "0.1.10"
+version = "0.1.11"
 description = "A simple JSON server"
-authors = ["Gerald <gera2ld@163.com>"]
+authors = ["Gerald <gera2ld@live.com>"]
 license = "MIT"
 packages = [
   { include = "json_server" },
