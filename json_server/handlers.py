@@ -78,7 +78,7 @@ class DataWrapper:
             data = child
         return data
 
-    def set(self, keys: List[DataKey], value: DataObject = None):
+    def set(self, keys: List[DataKey], value: Union[DataObject, None] = None):
         keys = list(keys)
         last_key = keys.pop()
         parent = self.get(keys)
@@ -129,15 +129,23 @@ class Handler:
         self.data = DataWrapper(filename)
         self.timer = None
 
-    async def __call__(self, request):
+    async def __call__(self, request: web.Request):
         method = getattr(self, f'do_{request.method}', None)
         if method is None:
             raise web.HTTPNotImplemented()
         keys = request.path.rstrip('/').split('/')[1:]
-        result = method(request, keys)
-        if asyncio.iscoroutine(result):
-            result = await result
-        return result
+
+        response = method(request, keys)
+        if asyncio.iscoroutine(response):
+            response = await response
+
+        # enable CORS
+        response.headers['access-control-allow-origin'] = request.headers.get(
+            'origin') or '*'
+        response.headers[
+            'access-control-allow-methods'] = 'GET,HEAD,POST,PUT,PATCH,DELETE'
+
+        return response
 
     def dump(self):
         self.timer = None
@@ -149,6 +157,9 @@ class Handler:
         if self.timer is not None:
             self.timer.cancel()
         self.timer = loop.call_later(1, self.dump)
+
+    def do_OPTIONS(self, request, _):
+        return web.HTTPNoContent()
 
     def do_GET(self, request, keys: List[DataKey]):
         data = self.data.get(keys)
